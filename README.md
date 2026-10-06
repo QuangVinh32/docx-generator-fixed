@@ -23,14 +23,12 @@ npm run build:web   # chỉ type-check và build React frontend/assets
 
 ## Triển khai Cloudflare Workers
 
-Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ SPA React, API cấu hình và tạo DOCX; các file trong `forms/`, `templates/` và `config/` được đóng gói cùng frontend thành assets.
+Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ SPA React, API đọc cấu hình và tạo DOCX; các file trong `forms/`, `templates/` và `config/` được đóng gói cùng frontend thành assets. Cloudflare không cần KV namespace.
 
-1. Tạo KV namespace: `npx wrangler kv namespace create TEMPLATE_CONFIG`.
-2. Thay giá trị `id` trong `wrangler.jsonc` bằng namespace ID được trả về.
-3. Cài dependencies và build assets: `npm ci` rồi `npm run build`.
-4. Deploy Worker: `npx wrangler deploy`.
+1. Cài dependencies và build assets: `npm ci` rồi `npm run build`.
+2. Deploy Worker: `npx wrangler deploy`.
 
-Trong Cloudflare Workers Builds, dùng `npm run build` làm build command và `npx wrangler deploy` làm deploy command. Sau khi deploy, cấu hình được lưu qua KV ở trang `/config`. Thay đổi file form hoặc DOCX trong repo cần build và deploy lại. PDF chưa được hỗ trợ trên Workers; giao diện ẩn lựa chọn PDF và API trả lỗi rõ ràng nếu được yêu cầu.
+Trong Cloudflare Workers Builds, dùng `npm run build` làm build command và `npx wrangler deploy` làm deploy command. Trang `/config` trên Cloudflare chỉ đọc; muốn thay đổi liên kết, sửa `config/templates.json` trong repo rồi deploy lại. Khi chạy bằng Node.js, trang cấu hình vẫn cho phép chỉnh sửa và lưu file cấu hình. PDF chưa được hỗ trợ trên Workers; giao diện chỉ cung cấp DOCX.
 
 ## Thêm một biểu mẫu mới
 
@@ -38,10 +36,10 @@ Mỗi biểu mẫu đầu vào là một file HTML riêng trong `forms/`, mỗi 
 
 1. Thêm form HTML vào `forms/` (ví dụ `discharge.html`). Mỗi input cần thuộc tính `name`, ví dụ `name="patientName"`. Form phải gửi `POST` tới `/generate` và có input ẩn `name="template"` với giá trị `__FORM_TEMPLATE_ID__`.
 2. Thêm mẫu Word DOCX vào `templates/`. Tên placeholder phải khớp với thuộc tính `name` trong form: `name="patientName"` tương ứng `{patientName}`.
-3. Mở `/config`, thêm liên kết, nhập mã và tên biểu mẫu, chọn file HTML cùng DOCX. Nếu vừa thêm file khi trang đang mở, bấm **Làm mới danh sách file** để cập nhật lựa chọn.
-4. Lưu cấu hình. Mẫu mới sẽ xuất hiện trên trang chủ và có thể tạo DOCX ngay.
+3. Cấu hình liên kết trong `config/templates.json`; trên Node.js có thể chỉnh sửa tại `/config`, còn trên Cloudflare cần commit và deploy lại.
+4. Mẫu mới xuất hiện trên trang chủ sau khi tải lại ứng dụng hoặc deploy.
 
-Mã form chỉ được có chữ thường, số và dấu gạch ngang. Không cần sửa TypeScript khi thêm biểu mẫu từ giao diện cấu hình. Các file form và DOCX mới cần được đặt vào thư mục tương ứng trước khi chọn trong trang cấu hình.
+Mã form chỉ được có chữ thường, số và dấu gạch ngang. Các file form và DOCX mới cần được đặt vào thư mục tương ứng trước khi cấu hình liên kết.
 
 ## Biểu mẫu hiện có
 

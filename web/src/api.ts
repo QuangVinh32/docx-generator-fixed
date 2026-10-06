@@ -1,4 +1,4 @@
-import type { AvailableFiles, FormDefinition, FormField, TemplateOption } from "./types";
+import type { ConfigResponse, FormDefinition, FormField, TemplateOption } from "./types";
 
 async function readJson<T>(response: Response): Promise<T> {
   const result: unknown = await response.json();
@@ -15,7 +15,8 @@ async function readJson<T>(response: Response): Promise<T> {
 
 export async function loadConfig(): Promise<{
   mappings: TemplateOption[];
-  files: AvailableFiles;
+  files: ConfigResponse["files"];
+  editable: boolean;
 }> {
   return readJson(await fetch("/api/config", { cache: "no-store" }));
 }

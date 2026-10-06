@@ -30,7 +30,7 @@ const getBodyRecord = (body: unknown): Record<string, unknown> => {
 
 app.get("/api/config", (_req, res) => {
   try {
-    res.json({ mappings: getTemplateOptions(), files: getAvailableFiles() });
+    res.json({ mappings: getTemplateOptions(), files: getAvailableFiles(), editable: true });
   } catch (error) {
     console.error("Could not read template configuration:", error);
     res.status(500).json({ message: "Không thể đọc cấu hình biểu mẫu." });

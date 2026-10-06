@@ -11,6 +11,12 @@ export type AvailableFiles = {
   templates: string[];
 };
 
+export type ConfigResponse = {
+  mappings: TemplateOption[];
+  files: AvailableFiles;
+  editable: boolean;
+};
+
 export type FormField = {
   name: string;
   label: string;

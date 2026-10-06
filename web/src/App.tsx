@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { loadConfig, loadForm, saveConfig } from "./api";
 import type {
-  AvailableFiles,
+  ConfigResponse,
   FormDefinition,
   FormField,
   TemplateOption,
@@ -71,7 +71,8 @@ function HomePage() {
 
 function ConfigPage() {
   const [mappings, setMappings] = useState<TemplateOption[]>([]);
-  const [files, setFiles] = useState<AvailableFiles>();
+  const [files, setFiles] = useState<ConfigResponse["files"]>();
+  const [editable, setEditable] = useState(true);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,7 @@ function ConfigPage() {
     try {
       const result = await loadConfig();
       setFiles(result.files);
+      setEditable(result.editable);
       if (showStatus) {
         setStatus("Đã cập nhật danh sách file HTML và DOCX.");
       } else {
@@ -153,11 +155,20 @@ function ConfigPage() {
         <div>
           <span className="eyebrow">QUẢN LÝ</span>
           <h1>Cấu hình biểu mẫu</h1>
-          <p>Kết nối form HTML với mẫu tài liệu DOCX.</p>
+          <p>{editable
+            ? "Kết nối form HTML với mẫu tài liệu DOCX."
+            : "Cấu hình hiện được đọc từ các file trong repository."}</p>
         </div>
-        <button className="button button-outline" type="button" disabled={busy}
+        {editable && <button className="button button-outline" type="button" disabled={busy}
           onClick={() => void refresh(true)}>↻ Làm mới danh sách file</button>
+        }
       </header>
+      {!editable && (
+        <div className="help-panel">
+          Cấu hình trên Cloudflare đang ở chế độ chỉ đọc. Để thay đổi, sửa <code>config/templates.json</code>
+          {' '}cùng các file trong <code>forms/</code> hoặc <code>templates/</code>, sau đó build và deploy lại.
+        </div>
+      )}
       <div className="help-panel">
         Tên thuộc tính <code>name</code> của trường nhập trong HTML cần khớp với biến trong DOCX,
         ví dụ <code>patientName</code> ↔ <code>{"{patientName}"}</code>.
@@ -170,32 +181,33 @@ function ConfigPage() {
               <article className="mapping-card" id={`mapping-${mapping.id}`} key={`${mapping.id}-${index}`}>
                 <div className="mapping-card-heading">
                   <span className="mapping-index">{String(index + 1).padStart(2, "0")}</span>
-                  <button className="button button-danger button-small" type="button"
+                  {editable && <button className="button button-danger button-small" type="button"
                     onClick={() => setMappings((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
                     Xóa
                   </button>
+                  }
                 </div>
                 <div className="mapping-fields">
                   <label>Mã biểu mẫu
-                    <input value={mapping.id} placeholder="vi-du-form"
+                    <input value={mapping.id} placeholder="vi-du-form" readOnly={!editable}
                       onChange={(event) => updateMapping(index, { id: event.target.value })} />
                   </label>
                   <label>Tên hiển thị
-                    <input value={mapping.label} placeholder="Tên biểu mẫu"
+                    <input value={mapping.label} placeholder="Tên biểu mẫu" readOnly={!editable}
                       onChange={(event) => updateMapping(index, { label: event.target.value })} />
                   </label>
                   <label className="field-wide">Mô tả
-                    <input value={mapping.description} placeholder="Mô tả ngắn"
+                    <input value={mapping.description} placeholder="Mô tả ngắn" readOnly={!editable}
                       onChange={(event) => updateMapping(index, { description: event.target.value })} />
                   </label>
                   <label>File HTML
-                    <select value={mapping.formFile}
+                    <select value={mapping.formFile} disabled={!editable}
                       onChange={(event) => updateMapping(index, { formFile: event.target.value })}>
                       {selectOptions(files?.forms ?? [], mapping.formFile)}
                     </select>
                   </label>
                   <label>File DOCX
-                    <select value={mapping.templateFile}
+                    <select value={mapping.templateFile} disabled={!editable}
                       onChange={(event) => updateMapping(index, { templateFile: event.target.value })}>
                       {selectOptions(files?.templates ?? [], mapping.templateFile)}
                     </select>
@@ -204,7 +216,7 @@ function ConfigPage() {
               </article>
             ))}
           </div>
-          <div className="config-actions">
+          {editable && <div className="config-actions">
             <button className="button button-outline" type="button" onClick={addMapping}>
               + Thêm liên kết
             </button>
@@ -214,7 +226,7 @@ function ConfigPage() {
                 {busy ? "Đang lưu..." : "Lưu cấu hình"}
               </button>
             </div>
-          </div>
+          </div>}
         </>
       )}
     </main>

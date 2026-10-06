@@ -8,11 +8,5 @@
     "binding": "ASSETS",
     "run_worker_first": true,
     "not_found_handling": "none"
-  },
-  "kv_namespaces": [
-    {
-      "binding": "TEMPLATE_CONFIG",
-      "id": "00000000000000000000000000000000"
-    }
-  ]
+  }
 }

@@ -18,10 +18,6 @@ interface WorkerEnvironment {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
-  TEMPLATE_CONFIG: {
-    get(key: string): Promise<string | null>;
-    put(key: string, value: string): Promise<void>;
-  };
 }
 
 const jsonResponse = (body: unknown, status = 200): Response =>
@@ -85,15 +81,6 @@ async function getMappings(
   env: WorkerEnvironment,
   requestUrl: string
 ): Promise<TemplateOption[]> {
-  if (!env.TEMPLATE_CONFIG) {
-    throw new Error("Thiếu binding KV TEMPLATE_CONFIG trong cấu hình Cloudflare.");
-  }
-
-  const stored = await env.TEMPLATE_CONFIG.get("mappings");
-  if (stored !== null) {
-    return parseMappings(JSON.parse(stored));
-  }
-
   const defaults = await getAssetText(env, requestUrl, "/config/templates.json");
   return parseMappings(JSON.parse(defaults));
 }
@@ -237,48 +224,13 @@ async function routeRequest(
       getMappings(env, request.url),
       getAvailableFiles(env, request.url),
     ]);
-    return jsonResponse({ mappings, files });
+    return jsonResponse({ mappings, files, editable: false });
   }
 
   if (url.pathname === "/api/config" && request.method === "PUT") {
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return jsonResponse({ message: "Nội dung JSON không hợp lệ." }, 400);
-    }
-    if (!isRecord(body) || !Array.isArray(body.mappings)) {
-      return jsonResponse({ message: "Danh sách liên kết biểu mẫu không hợp lệ." }, 400);
-    }
-
-    let mappings: TemplateOption[];
-    try {
-      mappings = parseMappings(body.mappings);
-    } catch (error) {
-      return jsonResponse({
-        message: error instanceof Error ? error.message : "Cấu hình biểu mẫu không hợp lệ.",
-      }, 400);
-    }
-    const files = await getAvailableFiles(env, request.url);
-    const ids = new Set<string>();
-    for (const mapping of mappings) {
-      if (ids.has(mapping.id)) {
-        return jsonResponse({ message: `Mã form không hợp lệ hoặc bị trùng: ${mapping.id}` }, 400);
-      }
-      if (!mapping.label.trim()) {
-        return jsonResponse({ message: `Vui lòng nhập tên hiển thị cho form "${mapping.id}".` }, 400);
-      }
-      if (!files.forms.includes(mapping.formFile)) {
-        return jsonResponse({ message: `Không tìm thấy file form HTML: ${mapping.formFile}` }, 400);
-      }
-      if (!files.templates.includes(mapping.templateFile)) {
-        return jsonResponse({ message: `Không tìm thấy file DOCX: ${mapping.templateFile}` }, 400);
-      }
-      ids.add(mapping.id);
-    }
-
-    await env.TEMPLATE_CONFIG.put("mappings", JSON.stringify(mappings));
-    return jsonResponse({ mappings, message: "Đã lưu cấu hình liên kết." });
+    return jsonResponse({
+      message: "Worker đang dùng cấu hình tĩnh. Hãy sửa config/templates.json trong repo rồi deploy lại.",
+    }, 405);
   }
 
   if (request.method === "POST" && url.pathname === "/generate") {
