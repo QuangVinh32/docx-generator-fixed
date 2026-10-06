@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Phiếu xét nghiệm</title>
+  <style>
+    body{margin:0;padding:32px;background:#eef6ff;font:16px Arial,sans-serif;color:#102a43}
+    main{max-width:760px;margin:auto;padding:32px;background:white;border:1px solid #dbe5ef;border-radius:16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    label{display:grid;gap:7px;font-weight:600}
+    input,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+    textarea{min-height:90px}
+    button{margin-top:20px;padding:12px 20px;border:0;border-radius:8px;background:#0f766e;color:#fff;font-weight:bold;cursor:pointer}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Phiếu xét nghiệm</h1>
+    <form action="/generate" method="post">
+      <input type="hidden" name="template" value="__FORM_TEMPLATE_ID__">
+      <div class="grid">
+        <label>Họ tên bệnh nhân<input name="patientName" required value="Nguyễn Văn A"></label>
+        <label>Mã BN<input name="patientCode" required value="BN-2025-001"></label>
+        <label>Ngày xét nghiệm<input name="testDate" type="date" required value="2026-10-06"></label>
+        <label>Loại xét nghiệm<input name="testType" required value="Huyết học"></label>
+        <label class="wide">Kết quả<input name="result" required value="Bình thường"></label>
+        <label class="wide">Ghi chú<textarea name="note">Không có bất thường</textarea></label>
+      </div>
+      <button type="submit" name="outputFormat" value="docx">Tải DOCX</button>
+      <button type="submit" name="outputFormat" value="pdf">Tải PDF</button>
+    </form>
+  </main>
+</body>
+</html>

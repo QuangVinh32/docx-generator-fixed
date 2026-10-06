@@ -9,6 +9,7 @@
     main{max-width:1050px;margin:auto;padding:28px;background:white;border:1px solid #dbe5ef;border-radius:16px}
     h1{margin-top:0;color:#0f766e}p,.help{color:#64748b;line-height:1.55}
     .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0}
+    .toolbar-actions{display:flex;gap:12px}
     .mapping{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.3fr 1.5fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0}
     input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
     button,.button{padding:11px 16px;border:0;border-radius:8px;background:#0f766e;color:white;font-weight:bold;cursor:pointer;text-decoration:none}
@@ -24,7 +25,10 @@
   <p class="help">Tên thuộc tính <code>name</code> của input trong HTML phải trùng với biến trong DOCX. Ví dụ <code>name="patientName"</code> kết nối với <code>{patientName}</code>.</p>
   <div class="toolbar">
     <a class="button secondary" href="/">← Danh sách biểu mẫu</a>
-    <button id="add" type="button">+ Thêm liên kết</button>
+    <div class="toolbar-actions">
+      <button id="refresh-files" class="secondary" type="button" disabled>Làm mới danh sách file</button>
+      <button id="add" type="button">+ Thêm liên kết</button>
+    </div>
   </div>
   <div class="mapping header"><span>Mã</span><span>Tên hiển thị</span><span>Mô tả</span><span>File input HTML</span><span>File DOCX</span><span></span></div>
   <div id="mappings"></div>
@@ -45,11 +49,19 @@
 
   const createFileSelect = (choices, selected) => {
     const select = document.createElement('select');
+    setFileSelectOptions(select, choices, selected);
+    return select;
+  };
+
+  const setFileSelectOptions = (select, choices, selected) => {
+    select.replaceChildren();
     for (const file of choices) {
       addOption(select, file, file);
     }
+    if (selected && !choices.includes(selected)) {
+      addOption(select, selected, `${selected} (không tìm thấy trên đĩa)`);
+    }
     select.value = selected;
-    return select;
   };
 
   const render = () => {
@@ -95,12 +107,36 @@
     }
   };
 
+  document.getElementById('refresh-files').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    statusElement.textContent = 'Đang tải danh sách file...';
+    try {
+      const response = await fetch('/api/config', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Không tải được danh sách file.');
+
+      files = result.files;
+      mappingsElement.querySelectorAll('.mapping-row').forEach((row, index) => {
+        const selects = row.querySelectorAll('select');
+        setFileSelectOptions(selects[0], files.forms, mappings[index].formFile);
+        setFileSelectOptions(selects[1], files.templates, mappings[index].templateFile);
+      });
+      statusElement.textContent = 'Đã cập nhật danh sách file HTML và DOCX.';
+    } catch (error) {
+      statusElement.textContent = error instanceof Error ? error.message : 'Không tải được danh sách file.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   const load = async () => {
     const response = await fetch('/api/config');
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || 'Không tải được cấu hình.');
     files = result.files;
     mappings = result.mappings;
+    document.getElementById('refresh-files').disabled = false;
     render();
     if (window.location.hash) {
       document.querySelector(window.location.hash)?.scrollIntoView({ behavior: 'smooth', block: 'center' });

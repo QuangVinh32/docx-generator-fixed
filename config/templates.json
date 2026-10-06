@@ -1,30 +1,44 @@
 [
   {
     "id": "appointment",
-    "label": "Gi?y h?n kh�m",
-    "description": "Phi?u h?n kh�m b?nh",
+    "label": "Giấy hẹn khám",
+    "description": "Phiếu hẹn khám bệnh",
     "formFile": "appointment.html",
     "templateFile": "appointment-template.docx"
   },
   {
     "id": "referral",
-    "label": "Gi?y ch? d?nh",
-    "description": "Phi?u ch? d?nh x�t nghi?m / kh�m chuy�n khoa",
+    "label": "Giấy chỉ định",
+    "description": "Phiếu chỉ định xét nghiệm / khám chuyên khoa",
     "formFile": "referral.html",
     "templateFile": "referral-template.docx"
   },
   {
     "id": "result-report",
-    "label": "Gi?y b�o k?t qu?",
-    "description": "B�o c�o k?t qu? kh�m v� di?u tr?",
+    "label": "Giấy báo kết quả",
+    "description": "Báo cáo kết quả khám và điều trị",
     "formFile": "result-report.html",
     "templateFile": "result-report-template.docx"
   },
   {
     "id": "medical-record",
-    "label": "Phi?u kh�m b?nh",
-    "description": "Phi?u t?ng h?p th�ng tin kh�m ban d?u",
+    "label": "Phiếu khám bệnh",
+    "description": "Phiếu tổng hợp thông tin khám ban đầu",
     "formFile": "medical-record.html",
     "templateFile": "medical-record-template.docx"
+  },
+  {
+    "id": "lab-test",
+    "label": "Xét nghiệm",
+    "description": "Phiếu xét nghiệm và chỉ định cận lâm sàng",
+    "formFile": "lab-test.html",
+    "templateFile": "lab-test-template.docx"
+  },
+  {
+    "id": "manual-refresh-check",
+    "label": "Kiểm tra làm mới thủ công",
+    "description": "Form kiểm tra xử lý làm mới dữ liệu thủ công",
+    "formFile": "manual-refresh-check.html",
+    "templateFile": "manual-refresh-check.docx"
   }
 ]

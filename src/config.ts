@@ -4,6 +4,29 @@ import path from "path";
 const projectRoot = path.resolve(__dirname, "..");
 const registryPath = path.join(projectRoot, "config", "templates.json");
 
+const decodeFileText = (buffer: Buffer): string => {
+  const candidates = ["utf-8", "windows-1258", "cp1258", "latin1"];
+
+  for (const encoding of candidates) {
+    try {
+      return new TextDecoder(encoding, { fatal: true }).decode(buffer);
+    } catch {
+      // Ignore invalid encodings and try the next candidate.
+    }
+  }
+
+  return buffer.toString("utf8");
+};
+
+const readRegistryContent = (): string => {
+  const buffer = fs.readFileSync(registryPath);
+  return decodeFileText(buffer);
+};
+
+const writeRegistryContent = (content: string): void => {
+  fs.writeFileSync(registryPath, content, "utf8");
+};
+
 export type TemplateOption = {
   id: string;
   label: string;
@@ -25,7 +48,7 @@ const isSafeFileName = (fileName: string, extension: string): boolean =>
   fileName.toLowerCase().endsWith(extension);
 
 export function getTemplateOptions(): TemplateOption[] {
-  const content = fs.readFileSync(CONFIG.registryPath, "utf8");
+  const content = readRegistryContent();
   const parsed: unknown = JSON.parse(content);
 
   if (!Array.isArray(parsed)) {
@@ -111,7 +134,7 @@ export function saveTemplateOptions(options: TemplateOption[]): void {
     ids.add(option.id);
   }
 
-  fs.writeFileSync(registryPath, `${JSON.stringify(options, null, 2)}\n`, "utf8");
+  writeRegistryContent(`${JSON.stringify(options, null, 2)}\n`);
 }
 
 export function getOutputFileName(templateId: string): string {

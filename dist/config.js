@@ -15,6 +15,25 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const projectRoot = path_1.default.resolve(__dirname, "..");
 const registryPath = path_1.default.join(projectRoot, "config", "templates.json");
+const decodeFileText = (buffer) => {
+    const candidates = ["utf-8", "windows-1258", "cp1258", "latin1"];
+    for (const encoding of candidates) {
+        try {
+            return new TextDecoder(encoding, { fatal: true }).decode(buffer);
+        }
+        catch {
+            // Ignore invalid encodings and try the next candidate.
+        }
+    }
+    return buffer.toString("utf8");
+};
+const readRegistryContent = () => {
+    const buffer = fs_1.default.readFileSync(registryPath);
+    return decodeFileText(buffer);
+};
+const writeRegistryContent = (content) => {
+    fs_1.default.writeFileSync(registryPath, content, "utf8");
+};
 exports.CONFIG = {
     projectRoot,
     outputDir: path_1.default.join(projectRoot, "output"),
@@ -25,7 +44,7 @@ exports.CONFIG = {
 const isSafeFileName = (fileName, extension) => path_1.default.basename(fileName) === fileName &&
     fileName.toLowerCase().endsWith(extension);
 function getTemplateOptions() {
-    const content = fs_1.default.readFileSync(exports.CONFIG.registryPath, "utf8");
+    const content = readRegistryContent();
     const parsed = JSON.parse(content);
     if (!Array.isArray(parsed)) {
         throw new Error("config/templates.json phải chứa danh sách cấu hình.");
@@ -97,7 +116,7 @@ function saveTemplateOptions(options) {
         }
         ids.add(option.id);
     }
-    fs_1.default.writeFileSync(registryPath, `${JSON.stringify(options, null, 2)}\n`, "utf8");
+    writeRegistryContent(`${JSON.stringify(options, null, 2)}\n`);
 }
 function getOutputFileName(templateId) {
     return `${templateId}-generated.docx`;
