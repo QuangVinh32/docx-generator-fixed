@@ -89,6 +89,8 @@ a { color: inherit; }
   .template-grid { grid-template-columns: 1fr; }
   .template-card { min-height: 240px; }
   .form-grid, .mapping-fields { grid-template-columns: 1fr; }
+  .form-field input, .form-field textarea, .form-field select,
+  .mapping-fields input, .mapping-fields select { font-size: 16px; }
   .field-wide { grid-column: auto; }
   .config-actions, .save-actions { align-items: stretch; flex-direction: column; }
   .save-actions .button, .config-actions > .button { width: 100%; }
