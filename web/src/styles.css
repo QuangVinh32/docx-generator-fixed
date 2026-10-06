@@ -1,0 +1,96 @@
+:root {
+  font-family: "Segoe UI", sans-serif;
+  color: #172b26;
+  background: #f3f7f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  --green: #087f5b;
+  --green-dark: #075b43;
+  --ink: #172b26;
+  --muted: #697a73;
+  --line: #e0e9e3;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input, textarea, select { font: inherit; }
+a { color: inherit; }
+
+.page-shell { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 64px 0 88px; }
+.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 36px; }
+.page-heading h1, .form-card h1 { margin: 8px 0 9px; font: 800 clamp(30px, 4vw, 42px)/1.12 "Segoe UI", sans-serif; letter-spacing: -1.6px; }
+.page-heading p, .form-description { margin: 0; color: var(--muted); font-size: 16px; }
+.eyebrow { color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.7px; }
+.button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 12px; padding: 0 17px; border: 0; border-radius: 9px; cursor: pointer; font-weight: 700; text-decoration: none; transition: transform .16s ease, background .16s ease; }
+.button:hover:not(:disabled) { transform: translateY(-1px); }
+.button:disabled { opacity: .58; cursor: wait; }
+.button-primary { color: white; background: var(--green); }
+.button-primary:hover:not(:disabled) { background: var(--green-dark); }
+.button-dark { color: white; background: #173d31; }
+.button-outline { color: #28483d; background: white; border: 1px solid var(--line); }
+.button-danger { color: #a3453f; background: #fff3f1; }
+.button-small { min-height: 34px; padding: 0 12px; font-size: 13px; }
+
+.template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.template-card { display: flex; min-height: 270px; flex-direction: column; gap: 17px; padding: 23px; border: 1px solid var(--line); border-radius: 15px; background: #fff; box-shadow: 0 8px 30px #1a4b3210; }
+.card-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; color: var(--green); background: #eaf6ef; font-size: 22px; }
+.template-card h2 { margin: 0 0 5px; font: 700 18px "Segoe UI", sans-serif; }
+.template-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.file-pair { display: grid; gap: 8px; margin-top: auto; color: #53665e; font-size: 12px; overflow-wrap: anywhere; }
+.file-pair span { display: flex; align-items: baseline; gap: 9px; }
+.file-pair small { min-width: 37px; color: #8a9b93; font-size: 10px; font-weight: 700; letter-spacing: .7px; }
+.card-actions { display: flex; align-items: center; gap: 9px; }
+.card-actions .button { flex: 1; }
+.icon-link { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); text-decoration: none; }
+
+.back-link { display: inline-block; margin-bottom: 23px; color: #4e6d60; font-size: 14px; font-weight: 600; text-decoration: none; }
+.back-link:hover { color: var(--green); }
+.form-shell { max-width: 830px; }
+.form-card { padding: clamp(24px, 5vw, 44px); border: 1px solid var(--line); border-radius: 18px; background: white; box-shadow: 0 12px 40px #1a4b320d; }
+.form-card h1 { margin-top: 9px; font-size: clamp(28px, 4vw, 36px); }
+.form-description { margin-bottom: 29px; line-height: 1.55; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 17px; }
+.form-field, .mapping-fields label { display: grid; gap: 8px; color: #344b41; font-size: 13px; font-weight: 700; }
+.form-field input, .form-field textarea, .form-field select, .mapping-fields input, .mapping-fields select { width: 100%; min-height: 45px; padding: 10px 12px; border: 1px solid #dce6df; border-radius: 8px; outline: none; color: var(--ink); background: #fff; font-weight: 400; }
+.form-field textarea { min-height: 96px; resize: vertical; }
+.form-field input:focus, .form-field textarea:focus, .form-field select:focus, .mapping-fields input:focus, .mapping-fields select:focus { border-color: #55a88a; box-shadow: 0 0 0 3px #087f5b17; }
+.field-wide { grid-column: 1 / -1; }
+.form-submit { display: flex; align-items: center; gap: 14px; margin-top: 27px; }
+.form-submit .button { min-height: 48px; }
+.form-footnote { color: #829188; font-size: 12px; }
+
+.config-shell { max-width: 960px; }
+.config-heading { margin-bottom: 23px; }
+.config-heading h1 { font-size: clamp(29px, 4vw, 37px); }
+.help-panel { margin-bottom: 20px; padding: 15px 17px; border: 1px solid #d9eadf; border-radius: 10px; color: #4b6558; background: #edf7f0; font-size: 13px; line-height: 1.6; }
+.help-panel code { padding: 2px 5px; border-radius: 4px; color: #245941; background: #deeee3; }
+.mapping-list { display: grid; gap: 13px; }
+.mapping-card { scroll-margin-top: 20px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+.mapping-card:target { border-color: #65ad89; box-shadow: 0 0 0 3px #087f5b15; }
+.mapping-card-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+.mapping-index { color: #92a49a; font: 700 12px "Segoe UI", sans-serif; letter-spacing: 1px; }
+.mapping-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.mapping-fields label { font-size: 12px; }
+.mapping-fields input, .mapping-fields select { min-height: 41px; padding: 8px 10px; font-size: 13px; }
+.config-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 19px; }
+.save-actions { display: flex; align-items: center; gap: 14px; }
+.status-message { color: var(--green); font-size: 13px; }
+.notice { margin: 16px 0; padding: 12px 14px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
+.notice-error { color: #9f352e; background: #fff0ee; border: 1px solid #f2d0cb; }
+.loading-card { padding: 23px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); background: white; }
+
+@media (max-width: 850px) { .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .page-shell { width: min(100% - 28px, 520px); padding: 34px 0 55px; }
+  .page-heading, .config-heading { align-items: flex-start; flex-direction: column; }
+  .template-grid { grid-template-columns: 1fr; }
+  .template-card { min-height: 240px; }
+  .form-grid, .mapping-fields { grid-template-columns: 1fr; }
+  .field-wide { grid-column: auto; }
+  .config-actions, .save-actions { align-items: stretch; flex-direction: column; }
+  .save-actions .button, .config-actions > .button { width: 100%; }
+  .form-submit { align-items: flex-start; flex-direction: column; }
+}

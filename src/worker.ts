@@ -27,18 +27,6 @@ interface WorkerEnvironment {
 const jsonResponse = (body: unknown, status = 200): Response =>
   Response.json(body, { status });
 
-const escapeHtml = (value: string): string =>
-  value.replace(/[&<>"']/g, (character) => {
-    const entities: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#39;",
-    };
-    return entities[character];
-  });
-
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -128,40 +116,6 @@ async function getAvailableFiles(
   return { forms: files.forms, templates: files.templates };
 }
 
-function renderHome(mappings: TemplateOption[]): string {
-  const links = mappings.map((template) => `
-    <article class="form-card">
-      <a class="form-link" href="/forms/${encodeURIComponent(template.id)}">
-        <strong>${escapeHtml(template.label)}</strong>
-        <span>${escapeHtml(template.description)}</span>
-      </a>
-      <div class="mapping">
-        <small>Input: <code>${escapeHtml(template.formFile)}</code></small>
-        <small>DOCX: <code>${escapeHtml(template.templateFile)}</code></small>
-      </div>
-      <a class="settings" href="/config#mapping-${encodeURIComponent(template.id)}">⚙ Cấu hình</a>
-    </article>
-  `).join("");
-
-  return `<!doctype html>
-  <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Biểu mẫu DOCX</title>
-    <style>
-      *{box-sizing:border-box}body{margin:0;padding:40px 20px;background:#eff6ff;color:#102a43;font:16px Arial,sans-serif}
-      main{max-width:1000px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:16px}
-      h1{color:#0f766e}.config{padding:11px 16px;border-radius:8px;background:#0f766e;color:white;text-decoration:none;font-weight:bold}
-      .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-      .form-card{display:grid;align-content:start;gap:14px;padding:22px;background:white;border:1px solid #dbe5ef;border-radius:14px}
-      .form-link{display:grid;gap:8px;color:inherit;text-decoration:none}.form-link strong{font-size:19px;color:#0f766e}
-      .form-link span{color:#475569}.mapping{display:grid;gap:6px}.mapping small{color:#64748b;overflow-wrap:anywhere}
-      .settings{justify-self:start;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;color:#0f766e;text-decoration:none;font-weight:bold}
-    </style>
-  </head><body><main>
-    <div class="top"><div><h1>Biểu mẫu xuất DOCX</h1><p>Chọn biểu mẫu cần nhập liệu.</p></div><a class="config" href="/config">Cấu hình liên kết</a></div>
-    <section class="cards">${links}</section>
-  </main></body></html>`;
-}
-
 function bytesToBinaryString(bytes: Uint8Array): string {
   const chunkSize = 0x8000;
   let result = "";
@@ -192,7 +146,7 @@ async function handleGenerate(
     return jsonResponse({ message: `Không có cấu hình cho loại form "${templateId}".` }, 400);
   }
 
-  const formHtml = await getAssetText(env, request.url, `/forms/${template.formFile}`);
+  const formHtml = await getAssetText(env, request.url, `/form-assets/${template.formFile}`);
   const fieldNames = new Set<string>();
   for (const match of formHtml.matchAll(/\bname=["']([^"']+)["']/gi)) {
     if (match[1] !== "template" && match[1] !== "outputFormat") {
@@ -249,17 +203,33 @@ async function routeRequest(
   const url = new URL(request.url);
 
   if (request.method === "GET" && url.pathname === "/") {
-    return new Response(renderHome(await getMappings(env, request.url)), {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
+    return assetFetch(env, request.url, "/index.html");
   }
 
   if (request.method === "GET" && url.pathname === "/config") {
-    const response = await assetFetch(env, request.url, "/config/config.html");
-    if (!response.ok) {
-      throw new Error("Không tìm thấy giao diện cấu hình đã triển khai.");
+    return assetFetch(env, request.url, "/index.html");
+  }
+
+  const formPageMatch = request.method === "GET" &&
+    url.pathname.match(/^\/form\/([a-z0-9][a-z0-9-]*)$/);
+  if (formPageMatch) {
+    const mappings = await getMappings(env, request.url);
+    if (!mappings.some((item) => item.id === formPageMatch[1])) {
+      return new Response("Không tìm thấy biểu mẫu.", { status: 404 });
     }
-    return response;
+    return assetFetch(env, request.url, "/index.html");
+  }
+
+  const formDataMatch = request.method === "GET" &&
+    url.pathname.match(/^\/api\/forms\/([a-z0-9][a-z0-9-]*)$/);
+  if (formDataMatch) {
+    const mappings = await getMappings(env, request.url);
+    const template = mappings.find((item) => item.id === formDataMatch[1]);
+    if (!template) {
+      return jsonResponse({ message: "Không tìm thấy biểu mẫu." }, 404);
+    }
+    const html = await getAssetText(env, request.url, `/form-assets/${template.formFile}`);
+    return jsonResponse({ template, html });
   }
 
   if (url.pathname === "/api/config" && request.method === "GET") {
@@ -311,29 +281,11 @@ async function routeRequest(
     return jsonResponse({ mappings, message: "Đã lưu cấu hình liên kết." });
   }
 
-  const formMatch = request.method === "GET" && url.pathname.match(/^\/forms\/([a-z0-9][a-z0-9-]*)$/);
-  if (formMatch) {
-    const mappings = await getMappings(env, request.url);
-    const template = mappings.find((item) => item.id === formMatch[1]);
-    if (!template) {
-      return new Response("Không tìm thấy biểu mẫu.", { status: 404 });
-    }
-    let html = await getAssetText(env, request.url, `/forms/${template.formFile}`);
-    html = html.replaceAll("__FORM_TEMPLATE_ID__", escapeHtml(template.id));
-    html = html.replace(
-      /<\/head>/i,
-      '<style>button[name="outputFormat"][value="pdf"]{display:none!important}</style></head>'
-    );
-    return new Response(html, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
-  }
-
   if (request.method === "POST" && url.pathname === "/generate") {
     return handleGenerate(request, env, await getMappings(env, request.url));
   }
 
-  return new Response("Not found", { status: 404 });
+  return env.ASSETS.fetch(request);
 }
 
 export default {

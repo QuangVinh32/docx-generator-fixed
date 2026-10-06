@@ -7,11 +7,23 @@ npm install
 npm run dev
 ```
 
-Mở trang biểu mẫu tại `http://localhost:3000`, hoặc giao diện cấu hình tại `http://localhost:3000/config`.
+Giao diện React + TypeScript mở tại `http://localhost:5173`; API Node.js chạy nội bộ tại `http://localhost:3000` và được Vite proxy tự động.
+
+Frontend nằm trong `web/src`. Các file HTML cũ trong `forms/` tiếp tục cung cấp nhãn, loại trường, giá trị mặc định và trường bắt buộc cho form React. API cấu hình vẫn dùng `config/templates.json` khi chạy Node.js.
+
+Các lệnh build:
+
+```bash
+npm run build       # build API Node.js và React frontend
+npm run build:api   # chỉ build API Node.js
+npm run build:web   # chỉ type-check và build React frontend/assets
+```
+
+Để chạy bản Node.js sau khi build, dùng `npm start`. Frontend được phục vụ tại `http://localhost:3000`.
 
 ## Triển khai Cloudflare Workers
 
-Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ giao diện, API cấu hình và tạo DOCX; các file trong `forms/`, `templates/` và `config/` được đóng gói thành assets.
+Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ SPA React, API cấu hình và tạo DOCX; các file trong `forms/`, `templates/` và `config/` được đóng gói cùng frontend thành assets.
 
 1. Tạo KV namespace: `npx wrangler kv namespace create TEMPLATE_CONFIG`.
 2. Thay giá trị `id` trong `wrangler.jsonc` bằng namespace ID được trả về.

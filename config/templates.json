@@ -47,5 +47,12 @@
     "description": "abc",
     "formFile": "lab-test.html",
     "templateFile": "lab-test-template.docx"
+  },
+  {
+    "id": "1",
+    "label": "1",
+    "description": "1",
+    "formFile": "appointment.html",
+    "templateFile": "appointment-template.docx"
   }
 ]

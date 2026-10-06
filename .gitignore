@@ -2,3 +2,6 @@
 /node_modules/
 /.wrangler/
 /dist/worker.js
+/dist-server/
+/client-dist/
+/public/
