@@ -9,6 +9,17 @@ npm run dev
 
 Mở trang biểu mẫu tại `http://localhost:3000`, hoặc giao diện cấu hình tại `http://localhost:3000/config`.
 
+## Triển khai Cloudflare Workers
+
+Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ giao diện, API cấu hình và tạo DOCX; các file trong `forms/`, `templates/` và `config/` được đóng gói thành assets.
+
+1. Tạo KV namespace: `npx wrangler kv namespace create TEMPLATE_CONFIG`.
+2. Thay giá trị `id` trong `wrangler.jsonc` bằng namespace ID được trả về.
+3. Cài dependencies và build assets: `npm ci` rồi `npm run build`.
+4. Deploy Worker: `npx wrangler deploy`.
+
+Trong Cloudflare Workers Builds, dùng `npm run build` làm build command và `npx wrangler deploy` làm deploy command. Sau khi deploy, cấu hình được lưu qua KV ở trang `/config`. Thay đổi file form hoặc DOCX trong repo cần build và deploy lại. PDF chưa được hỗ trợ trên Workers; giao diện ẩn lựa chọn PDF và API trả lỗi rõ ràng nếu được yêu cầu.
+
 ## Thêm một biểu mẫu mới
 
 Mỗi biểu mẫu đầu vào là một file HTML riêng trong `forms/`, mỗi tài liệu Word là một file `.docx` riêng trong `templates/`. Các kết nối được lưu trong `config/templates.json`.
@@ -29,7 +40,7 @@ Mã form chỉ được có chữ thường, số và dấu gạch ngang. Không
 - `forms/lab-test.html` ↔ `templates/lab-test-template.docx`
 - `forms/manual-refresh-check.html` ↔ `templates/manual-refresh-check.docx`
 
-File DOCX và PDF mặc định được lưu bên ngoài thư mục mã nguồn tại `Documents/DocxGenerator/output` trong thư mục người dùng đang chạy server; trên từng form có nút tải định dạng mong muốn. Có thể đặt biến môi trường `DOCX_OUTPUT_DIR` thành đường dẫn tuyệt đối tới thư mục lưu khác (ví dụ `E:\GeneratedDocuments`). Chuyển PDF cần cài LibreOffice trên máy chạy server. Nếu LibreOffice không nằm ở đường dẫn mặc định, đặt biến môi trường `LIBREOFFICE_PATH` trỏ tới `soffice.exe`.
+Khi chạy bằng Node.js, file DOCX và PDF mặc định được lưu bên ngoài thư mục mã nguồn tại `Documents/DocxGenerator/output` trong thư mục người dùng đang chạy server; có thể đặt biến môi trường `DOCX_OUTPUT_DIR` thành đường dẫn tuyệt đối tới thư mục lưu khác (ví dụ `E:\GeneratedDocuments`). Chuyển PDF trên Node.js cần cài LibreOffice. Trên Cloudflare Workers, chỉ hỗ trợ tải DOCX; PDF chưa được hỗ trợ.
 
 ## Cú pháp biến DOCX
 

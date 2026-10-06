@@ -1,21 +1,27 @@
 {
-  "name": "docx-generator",
-  "version": "1.0.1",
-  "private": true,
-  "scripts": {
-    "dev": "tsx src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
-  },
-  "dependencies": {
-    "docxtemplater": "^3.68.0",
-    "express": "^5.2.1",
-    "pizzip": "^3.2.0"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^22.0.0",
-    "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
-  }
+    "name": "docx-generator",
+    "version": "1.0.1",
+    "private": true,
+    "scripts": {
+        "dev": "tsx src/index.ts",
+        "build": "tsc && node scripts/build-worker-assets.js",
+        "build:node": "tsc",
+        "build:worker": "node scripts/build-worker-assets.js",
+        "start": "node dist/index.js"
+    },
+    "dependencies": {
+        "docxtemplater": "^3.68.0",
+        "express": "^5.2.1",
+        "pizzip": "^3.2.0"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "@types/node": "^22.0.0",
+        "tsx": "^4.19.0",
+        "typescript": "^5.7.0",
+        "wrangler": "^4.147.0"
+    },
+    "overrides": {
+        "sharp": "^0.35.5"
+    }
 }

@@ -1,0 +1,4 @@
+/worker-assets/
+/node_modules/
+/.wrangler/
+/dist/worker.js
