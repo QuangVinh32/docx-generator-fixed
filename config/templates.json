@@ -40,5 +40,12 @@
     "description": "Form kiểm tra xử lý làm mới dữ liệu thủ công",
     "formFile": "manual-refresh-check.html",
     "templateFile": "manual-refresh-check.docx"
+  },
+  {
+    "id": "f",
+    "label": "f",
+    "description": "f",
+    "formFile": "appointment.html",
+    "templateFile": "appointment-template.docx"
   }
 ]
