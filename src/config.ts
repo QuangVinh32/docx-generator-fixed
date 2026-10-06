@@ -1,8 +1,13 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 
 const projectRoot = path.resolve(__dirname, "..");
 const registryPath = path.join(projectRoot, "config", "templates.json");
+const outputDir = path.resolve(
+  process.env.DOCX_OUTPUT_DIR ||
+  path.join(os.homedir(), "Documents", "DocxGenerator", "output")
+);
 
 const decodeFileText = (buffer: Buffer): string => {
   const candidates = ["utf-8", "windows-1258", "cp1258", "latin1"];
@@ -37,7 +42,7 @@ export type TemplateOption = {
 
 export const CONFIG = {
   projectRoot,
-  outputDir: path.join(projectRoot, "output"),
+  outputDir,
   formsDir: path.join(projectRoot, "forms"),
   templatesDir: path.join(projectRoot, "templates"),
   registryPath,

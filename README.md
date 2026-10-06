@@ -29,7 +29,7 @@ Mã form chỉ được có chữ thường, số và dấu gạch ngang. Không
 - `forms/lab-test.html` ↔ `templates/lab-test-template.docx`
 - `forms/manual-refresh-check.html` ↔ `templates/manual-refresh-check.docx`
 
-File DOCX và PDF được lưu trong `output/`; trên từng form có nút tải định dạng mong muốn. Chuyển PDF cần cài LibreOffice trên máy chạy server. Nếu LibreOffice không nằm ở đường dẫn mặc định, đặt biến môi trường `LIBREOFFICE_PATH` trỏ tới `soffice.exe`.
+File DOCX và PDF mặc định được lưu bên ngoài thư mục mã nguồn tại `Documents/DocxGenerator/output` trong thư mục người dùng đang chạy server; trên từng form có nút tải định dạng mong muốn. Có thể đặt biến môi trường `DOCX_OUTPUT_DIR` thành đường dẫn tuyệt đối tới thư mục lưu khác (ví dụ `E:\GeneratedDocuments`). Chuyển PDF cần cài LibreOffice trên máy chạy server. Nếu LibreOffice không nằm ở đường dẫn mặc định, đặt biến môi trường `LIBREOFFICE_PATH` trỏ tới `soffice.exe`.
 
 ## Cú pháp biến DOCX
 

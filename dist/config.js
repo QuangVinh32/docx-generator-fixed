@@ -12,9 +12,12 @@ exports.getAvailableFiles = getAvailableFiles;
 exports.saveTemplateOptions = saveTemplateOptions;
 exports.getOutputFileName = getOutputFileName;
 const fs_1 = __importDefault(require("fs"));
+const os_1 = __importDefault(require("os"));
 const path_1 = __importDefault(require("path"));
 const projectRoot = path_1.default.resolve(__dirname, "..");
 const registryPath = path_1.default.join(projectRoot, "config", "templates.json");
+const outputDir = path_1.default.resolve(process.env.DOCX_OUTPUT_DIR ||
+    path_1.default.join(os_1.default.homedir(), "Documents", "DocxGenerator", "output"));
 const decodeFileText = (buffer) => {
     const candidates = ["utf-8", "windows-1258", "cp1258", "latin1"];
     for (const encoding of candidates) {
@@ -36,7 +39,7 @@ const writeRegistryContent = (content) => {
 };
 exports.CONFIG = {
     projectRoot,
-    outputDir: path_1.default.join(projectRoot, "output"),
+    outputDir,
     formsDir: path_1.default.join(projectRoot, "forms"),
     templatesDir: path_1.default.join(projectRoot, "templates"),
     registryPath,

@@ -4,7 +4,7 @@
     "label": "Giấy hẹn khám",
     "description": "Phiếu hẹn khám bệnh",
     "formFile": "appointment.html",
-    "templateFile": "appointment-template.docx"
+    "templateFile": "giay_hen_kham.docx"
   },
   {
     "id": "referral",
@@ -42,10 +42,10 @@
     "templateFile": "manual-refresh-check.docx"
   },
   {
-    "id": "f",
-    "label": "f",
-    "description": "f",
-    "formFile": "appointment.html",
-    "templateFile": "appointment-template.docx"
+    "id": "abc",
+    "label": "abc",
+    "description": "abc",
+    "formFile": "lab-test.html",
+    "templateFile": "lab-test-template.docx"
   }
 ]
