@@ -1,8 +1,8 @@
-   {
-     "name": "docx-generator-fixed",
-     "compatibility_date": "2026-10-06",
-     "assets": {
-       "directory": "./dist",
-       "not_found_handling": "single-page-application"
-     }
-   }
+{
+  "name": "docx-generator-fixed",
+  "compatibility_date": "2026-10-06",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
