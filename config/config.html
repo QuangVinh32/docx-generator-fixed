@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cấu hình liên kết DOCX</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;padding:32px;background:#eff6ff;color:#102a43;font:16px Arial,sans-serif}
+    main{max-width:1050px;margin:auto;padding:28px;background:white;border:1px solid #dbe5ef;border-radius:16px}
+    h1{margin-top:0;color:#0f766e}p,.help{color:#64748b;line-height:1.55}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0}
+    .mapping{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.3fr 1.5fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0}
+    input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+    button,.button{padding:11px 16px;border:0;border-radius:8px;background:#0f766e;color:white;font-weight:bold;cursor:pointer;text-decoration:none}
+    .remove{background:#b91c1c}.secondary{background:#475569}.status{min-height:24px;margin-top:12px;color:#0f766e}
+    .header,.mapping{font-weight:bold}.header{color:#475569}
+    .mapping-row{scroll-margin-top:20px}.mapping-row:target{background:#dff7f3;outline:2px solid #0f766e;border-radius:8px}
+    @media(max-width:780px){body{padding:12px}main{padding:18px}.mapping{grid-template-columns:1fr}.header{display:none}.toolbar{align-items:stretch;flex-direction:column}}
+  </style>
+</head>
+<body><main>
+  <h1>Cấu hình form HTML ↔ DOCX</h1>
+  <p>Mỗi form HTML sẽ kết nối tới một file DOCX. Đưa file HTML vào thư mục <code>forms</code>, file Word vào <code>templates</code>, sau đó chọn cặp file ở đây và lưu.</p>
+  <p class="help">Tên thuộc tính <code>name</code> của input trong HTML phải trùng với biến trong DOCX. Ví dụ <code>name="patientName"</code> kết nối với <code>{patientName}</code>.</p>
+  <div class="toolbar">
+    <a class="button secondary" href="/">← Danh sách biểu mẫu</a>
+    <button id="add" type="button">+ Thêm liên kết</button>
+  </div>
+  <div class="mapping header"><span>Mã</span><span>Tên hiển thị</span><span>Mô tả</span><span>File input HTML</span><span>File DOCX</span><span></span></div>
+  <div id="mappings"></div>
+  <div class="toolbar"><span id="status" class="status"></span><button id="save" type="button">Lưu cấu hình</button></div>
+</main>
+<script>
+  const mappingsElement = document.getElementById('mappings');
+  const statusElement = document.getElementById('status');
+  let files;
+  let mappings = [];
+
+  const addOption = (select, value, label) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    select.append(option);
+  };
+
+  const createFileSelect = (choices, selected) => {
+    const select = document.createElement('select');
+    for (const file of choices) {
+      addOption(select, file, file);
+    }
+    select.value = selected;
+    return select;
+  };
+
+  const render = () => {
+    mappingsElement.replaceChildren();
+    for (const mapping of mappings) {
+      const row = document.createElement('div');
+      row.className = 'mapping';
+      row.classList.add('mapping-row');
+      row.id = 'mapping-' + mapping.id;
+
+      const idInput = document.createElement('input');
+      idInput.placeholder = 'new-form';
+      idInput.value = mapping.id;
+      idInput.addEventListener('input', () => { mapping.id = idInput.value; });
+
+      const labelInput = document.createElement('input');
+      labelInput.placeholder = 'Tên biểu mẫu';
+      labelInput.value = mapping.label;
+      labelInput.addEventListener('input', () => { mapping.label = labelInput.value; });
+
+      const descriptionInput = document.createElement('input');
+      descriptionInput.placeholder = 'Mô tả';
+      descriptionInput.value = mapping.description;
+      descriptionInput.addEventListener('input', () => { mapping.description = descriptionInput.value; });
+
+      const formSelect = createFileSelect(files.forms, mapping.formFile);
+      formSelect.addEventListener('change', () => { mapping.formFile = formSelect.value; });
+
+      const docxSelect = createFileSelect(files.templates, mapping.templateFile);
+      docxSelect.addEventListener('change', () => { mapping.templateFile = docxSelect.value; });
+
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.className = 'remove';
+      removeButton.textContent = 'Xóa';
+      removeButton.addEventListener('click', () => {
+        mappings = mappings.filter((item) => item !== mapping);
+        render();
+      });
+
+      row.append(idInput, labelInput, descriptionInput, formSelect, docxSelect, removeButton);
+      mappingsElement.append(row);
+    }
+  };
+
+  const load = async () => {
+    const response = await fetch('/api/config');
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Không tải được cấu hình.');
+    files = result.files;
+    mappings = result.mappings;
+    render();
+    if (window.location.hash) {
+      document.querySelector(window.location.hash)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  document.getElementById('add').addEventListener('click', () => {
+    if (!files.forms.length || !files.templates.length) {
+      statusElement.textContent = 'Thêm file .html vào forms và .docx vào templates trước.';
+      return;
+    }
+    mappings.push({
+      id: '',
+      label: '',
+      description: '',
+      formFile: files.forms[0],
+      templateFile: files.templates[0]
+    });
+    render();
+  });
+
+  document.getElementById('save').addEventListener('click', async () => {
+    statusElement.textContent = 'Đang lưu...';
+    try {
+      const response = await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mappings })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Không lưu được cấu hình.');
+      mappings = result.mappings;
+      render();
+      statusElement.textContent = result.message;
+    } catch (error) {
+      statusElement.textContent = error instanceof Error ? error.message : 'Không lưu được cấu hình.';
+    }
+  });
+
+  load().catch((error) => {
+    statusElement.textContent = error instanceof Error ? error.message : 'Không tải được cấu hình.';
+  });
+</script>
+</body>
+</html>

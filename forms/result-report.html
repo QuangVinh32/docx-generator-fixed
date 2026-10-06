@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giấy báo kết quả</title>
+  <style>
+    body{margin:0;padding:32px;background:#eef6ff;font:16px Arial,sans-serif;color:#102a43}
+    main{max-width:760px;margin:auto;padding:32px;background:white;border:1px solid #dbe5ef;border-radius:16px}
+    h1{margin-top:0;color:#0f766e} .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    label{display:grid;gap:7px;font-weight:600} .wide{grid-column:1/-1}
+    input,textarea{box-sizing:border-box;width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+    textarea{min-height:90px} button{margin-top:20px;padding:12px 20px;border:0;border-radius:8px;background:#0f766e;color:#fff;font-weight:bold;cursor:pointer}
+    @media(max-width:600px){body{padding:12px}main{padding:20px}.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+  </style>
+</head>
+<body><main>
+  <h1>Giấy báo kết quả</h1>
+  <p>Nhập kết quả khám và khuyến nghị theo dõi.</p>
+  <form action="/generate" method="post">
+    <input type="hidden" name="template" value="__FORM_TEMPLATE_ID__">
+    <div class="grid">
+      <label>Họ tên bệnh nhân<input name="patientName" required value="Nguyễn Văn A"></label>
+      <label>Mã bệnh nhân<input name="patientCode" required value="BN-2024-001"></label>
+      <label>Bác sĩ kết luận<input name="doctor" required value="BS. Mai Thị D"></label>
+      <label>Ngày kết quả<input name="resultDate" type="date" required value="2026-10-13"></label>
+      <label class="wide">Chẩn đoán<textarea name="diagnosis" required>Viêm họng cấp</textarea></label>
+      <label class="wide">Nội dung kết quả<textarea name="resultSummary" required>Huyết áp ổn định, không có dấu hiệu nặng</textarea></label>
+      <label class="wide">Khuyến nghị<textarea name="recommendation">Uống thuốc theo chỉ định và tái khám sau 5 ngày</textarea></label>
+    </div>
+    <button type="submit" name="outputFormat" value="docx">Tải DOCX</button>
+    <button type="submit" name="outputFormat" value="pdf">Tải PDF</button>
+  </form>
+</main></body>
+</html>

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "appointment",
+    "label": "Gi?y h?n kh�m",
+    "description": "Phi?u h?n kh�m b?nh",
+    "formFile": "appointment.html",
+    "templateFile": "appointment-template.docx"
+  },
+  {
+    "id": "referral",
+    "label": "Gi?y ch? d?nh",
+    "description": "Phi?u ch? d?nh x�t nghi?m / kh�m chuy�n khoa",
+    "formFile": "referral.html",
+    "templateFile": "referral-template.docx"
+  },
+  {
+    "id": "result-report",
+    "label": "Gi?y b�o k?t qu?",
+    "description": "B�o c�o k?t qu? kh�m v� di?u tr?",
+    "formFile": "result-report.html",
+    "templateFile": "result-report-template.docx"
+  },
+  {
+    "id": "medical-record",
+    "label": "Phi?u kh�m b?nh",
+    "description": "Phi?u t?ng h?p th�ng tin kh�m ban d?u",
+    "formFile": "medical-record.html",
+    "templateFile": "medical-record-template.docx"
+  }
+]
