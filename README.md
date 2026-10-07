@@ -23,12 +23,15 @@ npm run build:web   # chỉ type-check và build React frontend/assets
 
 ## Triển khai Cloudflare Workers
 
-Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ SPA React, API đọc cấu hình và tạo DOCX; các file trong `forms/`, `templates/` và `config/` được đóng gói cùng frontend thành assets. Cloudflare không cần KV namespace.
+Ứng dụng Cloudflare chạy bằng Worker (không phải static Pages): Worker phục vụ SPA React, API đọc cấu hình và tạo tài liệu; các file trong `forms/`, `templates/` và `config/` được đóng gói cùng frontend thành assets. Cloudflare không cần KV namespace.
 
 1. Cài dependencies và build assets: `npm ci` rồi `npm run build`.
-2. Deploy Worker: `npx wrangler deploy`.
+2. Tạo API key trong CloudConvert, rồi lưu bằng secret: `npx wrangler secret put CLOUDCONVERT_API_KEY`.
+3. Deploy Worker: `npx wrangler deploy`.
 
-Trong Cloudflare Workers Builds, dùng `npm run build` làm build command và `npx wrangler deploy` làm deploy command. Trang `/config` trên Cloudflare chỉ đọc; muốn thay đổi liên kết, sửa `config/templates.json` trong repo rồi deploy lại. Khi chạy bằng Node.js, trang cấu hình vẫn cho phép chỉnh sửa và lưu file cấu hình. PDF chưa được hỗ trợ trên Workers; giao diện chỉ cung cấp DOCX.
+Trong Cloudflare Workers Builds, đặt `CLOUDCONVERT_API_KEY` trong phần secrets/environment variables của Worker; không đưa API key vào repo hay frontend. Dùng `npm run build` làm build command và `npx wrangler deploy` làm deploy command. Trang `/config` trên Cloudflare chỉ đọc; muốn thay đổi liên kết, sửa `config/templates.json` trong repo rồi deploy lại. Khi chạy bằng Node.js, trang cấu hình vẫn cho phép chỉnh sửa và lưu file cấu hình.
+
+Khi chọn PDF, ứng dụng gửi DOCX đã tạo cùng nội dung biểu mẫu tới CloudConvert để chuyển đổi. Người dùng phải xác nhận việc gửi này trên form. Hãy kiểm tra điều khoản, quyền riêng tư và yêu cầu xử lý dữ liệu áp dụng cho tài khoản/dịch vụ của bạn trước khi dùng với dữ liệu cá nhân hoặc y tế. Tính năng này cần secret `CLOUDCONVERT_API_KEY`; DOCX vẫn tải trực tiếp mà không cần dịch vụ đó.
 
 ## Thêm một biểu mẫu mới
 
@@ -50,7 +53,7 @@ Mã form chỉ được có chữ thường, số và dấu gạch ngang. Các f
 - `forms/lab-test.html` ↔ `templates/lab-test-template.docx`
 - `forms/manual-refresh-check.html` ↔ `templates/manual-refresh-check.docx`
 
-Khi chạy bằng Node.js, file DOCX và PDF mặc định được lưu bên ngoài thư mục mã nguồn tại `Documents/DocxGenerator/output` trong thư mục người dùng đang chạy server; có thể đặt biến môi trường `DOCX_OUTPUT_DIR` thành đường dẫn tuyệt đối tới thư mục lưu khác (ví dụ `E:\GeneratedDocuments`). Chuyển PDF trên Node.js cần cài LibreOffice. Trên Cloudflare Workers, chỉ hỗ trợ tải DOCX; PDF chưa được hỗ trợ.
+Khi chạy bằng Node.js, file DOCX và PDF mặc định được lưu bên ngoài thư mục mã nguồn tại `Documents/DocxGenerator/output` trong thư mục người dùng đang chạy server; có thể đặt biến môi trường `DOCX_OUTPUT_DIR` thành đường dẫn tuyệt đối tới thư mục lưu khác (ví dụ `E:\GeneratedDocuments`). Chuyển PDF trên Node.js cần cài LibreOffice. Trên Cloudflare Workers, chuyển đổi PDF cần secret `CLOUDCONVERT_API_KEY` như hướng dẫn ở trên.
 
 ## Cú pháp biến DOCX
 

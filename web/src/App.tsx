@@ -249,6 +249,8 @@ function FormPage({ templateId }: { templateId: string }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [outputFormat, setOutputFormat] = useState<"docx" | "pdf">("docx");
+  const [cloudConvertConsent, setCloudConvertConsent] = useState(false);
 
   useEffect(() => {
     loadForm(templateId).then((result) => {
@@ -273,7 +275,8 @@ function FormPage({ templateId }: { templateId: string }) {
     try {
       const body = new URLSearchParams();
       body.set("template", definition.template.id);
-      body.set("outputFormat", "docx");
+      body.set("outputFormat", outputFormat);
+      body.set("cloudConvertConsent", String(outputFormat === "pdf" && cloudConvertConsent));
       for (const field of definition.fields) {
         body.append(field.name, values[field.name] ?? "");
       }
@@ -294,7 +297,7 @@ function FormPage({ templateId }: { templateId: string }) {
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = objectUrl;
-      anchor.download = `${definition.template.id}-generated.docx`;
+      anchor.download = `${definition.template.id}-generated.${outputFormat}`;
       anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (reason) {
@@ -326,10 +329,29 @@ function FormPage({ templateId }: { templateId: string }) {
                 onChange={(value) => updateValue(field.name, value)} />
             ))}
           </div>
+          <label className="form-field format-field">Định dạng tải xuống
+            <select value={outputFormat}
+              onChange={(event) => setOutputFormat(
+                event.target.value === "pdf" ? "pdf" : "docx"
+              )}>
+              <option value="docx">DOCX</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </label>
+          {outputFormat === "pdf" && (
+            <label className="pdf-consent">
+              <input type="checkbox" checked={cloudConvertConsent}
+                onChange={(event) => setCloudConvertConsent(event.target.checked)} />
+              <span>
+                Tôi đồng ý gửi tài liệu chứa thông tin đã nhập tới CloudConvert để chuyển đổi sang PDF.
+              </span>
+            </label>
+          )}
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <div className="form-submit">
-            <button className="button button-primary" type="submit" disabled={busy}>
-              {busy ? "Đang tạo DOCX..." : "Tải file DOCX"}
+            <button className="button button-primary" type="submit"
+              disabled={busy || (outputFormat === "pdf" && !cloudConvertConsent)}>
+              {busy ? `Đang tạo ${outputFormat.toUpperCase()}...` : `Tải file ${outputFormat.toUpperCase()}`}
               {!busy && <span aria-hidden="true">↓</span>}
             </button>
             <span className="form-footnote">Tệp sẽ được tạo và tải xuống ngay.</span>

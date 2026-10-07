@@ -18,7 +18,27 @@ interface WorkerEnvironment {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
+  CLOUDCONVERT_API_KEY?: string;
 }
+
+type CloudConvertTask = {
+  name?: string;
+  status?: string;
+  message?: string;
+  result?: {
+    form?: {
+      url?: string;
+      parameters?: Record<string, unknown>;
+    };
+    files?: Array<{ url?: string }>;
+  };
+};
+
+type CloudConvertJob = {
+  id?: string;
+  status?: string;
+  tasks?: CloudConvertTask[];
+};
 
 const jsonResponse = (body: unknown, status = 200): Response =>
   Response.json(body, { status });
@@ -121,6 +141,124 @@ function normalizeFormData(data: Record<string, string | string[]>): Record<stri
   );
 }
 
+function parseCloudConvertJob(value: unknown): CloudConvertJob {
+  if (
+    !isRecord(value) ||
+    !isRecord(value.data) ||
+    typeof value.data.id !== "string" ||
+    typeof value.data.status !== "string" ||
+    !Array.isArray(value.data.tasks) ||
+    !value.data.tasks.every((task) => isRecord(task))
+  ) {
+    throw new Error("CloudConvert trả về dữ liệu công việc không hợp lệ.");
+  }
+  return value.data as CloudConvertJob;
+}
+
+async function cloudConvertApiRequest(
+  url: string,
+  apiKey: string,
+  init?: RequestInit
+): Promise<unknown> {
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      ...init?.headers,
+    },
+  });
+  if (!response.ok) {
+    const details = (await response.text()).slice(0, 500);
+    throw new Error(`CloudConvert API lỗi (${response.status}): ${details}`);
+  }
+  return response.json();
+}
+
+async function convertDocxToPdf(
+  docxBytes: ArrayBuffer,
+  fileName: string,
+  apiKey: string
+): Promise<ArrayBuffer> {
+  const jobData = await cloudConvertApiRequest(
+    "https://api.cloudconvert.com/v2/jobs",
+    apiKey,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tasks: {
+          "import-docx": { operation: "import/upload" },
+          "convert-docx": {
+            operation: "convert",
+            input: "import-docx",
+            input_format: "docx",
+            output_format: "pdf",
+          },
+          "export-pdf": { operation: "export/url", input: "convert-docx" },
+        },
+      }),
+    }
+  );
+  let job = parseCloudConvertJob(jobData);
+  const uploadTask = job.tasks?.find((task) => task.name === "import-docx");
+  const uploadUrl = uploadTask?.result?.form?.url;
+  const uploadParameters = uploadTask?.result?.form?.parameters;
+  if (!uploadUrl || !uploadParameters) {
+    throw new Error("CloudConvert không cung cấp thông tin upload file.");
+  }
+
+  const uploadForm = new FormData();
+  for (const [key, value] of Object.entries(uploadParameters)) {
+    if (typeof value === "string" || typeof value === "number") {
+      uploadForm.append(key, String(value));
+    }
+  }
+  uploadForm.append("file", new Blob([docxBytes]), fileName);
+  const uploadResponse = await fetch(uploadUrl, { method: "POST", body: uploadForm });
+  if (!uploadResponse.ok) {
+    const details = (await uploadResponse.text()).slice(0, 500);
+    throw new Error(`Không thể upload DOCX lên CloudConvert (${uploadResponse.status}): ${details}`);
+  }
+
+  const deadline = Date.now() + 110_000;
+  while (job.status !== "finished") {
+    const failedTask = job.tasks?.find((task) => task.status === "error");
+    if (job.status === "error" || failedTask) {
+      throw new Error(
+        `CloudConvert không chuyển được DOCX sang PDF: ${failedTask?.message ?? "công việc thất bại."}`
+      );
+    }
+    if (!job.id) {
+      throw new Error("CloudConvert không trả về mã công việc.");
+    }
+    if (Date.now() >= deadline) {
+      throw new Error("CloudConvert chuyển PDF quá thời gian chờ. Vui lòng thử lại.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const updated = await cloudConvertApiRequest(
+      `https://api.cloudconvert.com/v2/jobs/${encodeURIComponent(job.id)}`,
+      apiKey
+    );
+    job = parseCloudConvertJob(updated);
+  }
+
+  const downloadUrl = job.tasks
+    ?.find((task) => task.name === "export-pdf")
+    ?.result?.files?.[0]?.url;
+  if (!downloadUrl) {
+    throw new Error("CloudConvert hoàn tất nhưng không trả về file PDF.");
+  }
+  const pdfResponse = await fetch(downloadUrl);
+  if (!pdfResponse.ok) {
+    throw new Error(`Không thể tải file PDF từ CloudConvert (${pdfResponse.status}).`);
+  }
+  const pdfBytes = await pdfResponse.arrayBuffer();
+  if (pdfBytes.byteLength < 5 || new TextDecoder().decode(pdfBytes.slice(0, 5)) !== "%PDF-") {
+    throw new Error("CloudConvert trả về file PDF không hợp lệ.");
+  }
+  return pdfBytes;
+}
+
 async function handleGenerate(
   request: Request,
   env: WorkerEnvironment,
@@ -152,8 +290,19 @@ async function handleGenerate(
   }
 
   const outputFormat = String(body.get("outputFormat") ?? "docx").toLowerCase();
-  if (outputFormat !== "docx") {
-    return jsonResponse({ message: "Cloudflare hiện chỉ hỗ trợ tải DOCX; PDF chưa được bật." }, 400);
+  const cloudConvertApiKey = env.CLOUDCONVERT_API_KEY;
+  if (outputFormat !== "docx" && outputFormat !== "pdf") {
+    return jsonResponse({ message: "Định dạng tải xuống không hợp lệ." }, 400);
+  }
+  if (outputFormat === "pdf" && !cloudConvertApiKey) {
+    return jsonResponse({
+      message: "Chức năng PDF chưa được cấu hình. Hãy đặt secret CLOUDCONVERT_API_KEY trên Cloudflare.",
+    }, 503);
+  }
+  if (outputFormat === "pdf" && body.get("cloudConvertConsent") !== "true") {
+    return jsonResponse({
+      message: "Cần xác nhận gửi tài liệu tới CloudConvert để tạo PDF.",
+    }, 400);
   }
 
   const templateResponse = await assetFetch(env, request.url, `/templates/${template.templateFile}`);
@@ -172,12 +321,25 @@ async function handleGenerate(
     type: "uint8array",
     compression: "DEFLATE",
   });
-  const outputBuffer = new ArrayBuffer(output.byteLength);
-  new Uint8Array(outputBuffer).set(output);
-  const fileName = `${template.id}-generated.docx`;
-  return new Response(outputBuffer, {
+  const docxBuffer = new ArrayBuffer(output.byteLength);
+  new Uint8Array(docxBuffer).set(output);
+  const fileName = `${template.id}-generated.${outputFormat}`;
+  let responseBytes = docxBuffer;
+  if (outputFormat === "pdf") {
+    if (!cloudConvertApiKey) {
+      throw new Error("Thiếu secret CLOUDCONVERT_API_KEY trên Cloudflare.");
+    }
+    responseBytes = await convertDocxToPdf(
+      docxBuffer,
+      `${template.id}-generated.docx`,
+      cloudConvertApiKey
+    );
+  }
+  return new Response(responseBytes, {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "Content-Type": outputFormat === "pdf"
+        ? "application/pdf"
+        : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "Content-Disposition": `attachment; filename="${fileName}"`,
     },
   });
